@@ -1,4 +1,4 @@
-name: Build iOS IPA
+name: Build Unsigned iOS IPA
 
 on:
   push:
@@ -36,16 +36,16 @@ jobs:
           cd ios
           pod install
 
-      - name: Build IPA
+      - name: Build unsigned IPA
         run: |
           cd ios/App
           xcodebuild -scheme App -workspace App.xcworkspace \
             -configuration Release \
             -allowProvisioningUpdates \
-            -destination 'generic/platform=iOS' \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
-            BUILD_DIR=build
+            BUILD_DIR=build \
+            -destination 'generic/platform=iOS'
 
       - name: Package IPA
         run: |
@@ -54,8 +54,8 @@ jobs:
           cp -r App.app Payload/
           zip -r MyApp.ipa Payload
 
-      - name: Upload IPA
-        uses: actions/upload-artifact@v3
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
         with:
           name: MyApp.ipa
           path: ios/App/build/Release-iphoneos/MyApp.ipa
