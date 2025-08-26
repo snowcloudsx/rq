@@ -11,31 +11,39 @@ jobs:
     runs-on: macos-latest
 
     steps:
+      # 1️⃣ Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      # 2️⃣ Set up Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '20'
 
+      # 3️⃣ Install project dependencies
       - name: Install dependencies
         run: |
           npm install
           npm install @capacitor/cli @capacitor/core
           npm install -g cordova
 
+      # 4️⃣ Sync Capacitor iOS
       - name: Sync Capacitor iOS
         run: npx cap sync ios
 
-      - name: Install CocoaPods
-        run: sudo gem install cocoapods
-
-      - name: Install iOS pods
+      # 5️⃣ Install CocoaPods if needed
+      - name: Install CocoaPods if Podfile exists
         run: |
-          cd ios
-          pod install
+          sudo gem install cocoapods
+          if [ -f ios/App/Podfile ]; then
+            cd ios/App
+            pod install
+          else
+            echo "No Podfile found, skipping pod install"
+          fi
 
+      # 6️⃣ Build unsigned IPA
       - name: Build unsigned IPA
         run: |
           cd ios/App
@@ -47,6 +55,7 @@ jobs:
             BUILD_DIR=build \
             -destination 'generic/platform=iOS'
 
+      # 7️⃣ Package IPA
       - name: Package IPA
         run: |
           cd ios/App/build/Release-iphoneos
@@ -54,7 +63,8 @@ jobs:
           cp -r App.app Payload/
           zip -r MyApp.ipa Payload
 
-      - name: Upload IPA artifact
+      # 8️⃣ Upload IPA artifact
+      - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
           name: MyApp.ipa
